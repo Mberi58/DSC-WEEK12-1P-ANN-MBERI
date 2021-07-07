@@ -1,0 +1,408 @@
+## 1. INTRODUCTION
+
+### 1.1 Defining the Question
+My work is to identify which facators determine whether a user clicks on an ad or not.
+
+### 1.2 Setting the Metric for Success
+The project will be considered a success when I am able to identify what makes a user more likely to click on an ad.
+
+### 1.3 Outlining the Context
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. She would now like to employ your services as a Data Science Consultant to help her identify which individuals are most likely to click on her ads.
+
+### 1.4 Drafting the Experimental Design
+1. Define the question, set the metric for success, outline the context, drafting the experimental design, and determining the appropriateness of the data.
+2. Load the dataset and previewing it.
+3. Check for missing and duplicated values and deal with them where necessary.
+4. Check for outliers and other anomalies and deal with them where necessary.
+5. Perform univariate and bivariate analysis.
+6. Conclude and provide insights on how this project can be improved.
+
+### 1.5 Determining the Appropriateness of the Data
+#save the commands used during the session 
+##
+## Install the following packages 
+
+
+
+install.packages("foreign")
+library(foreign)
+install.packages("car")
+install.packages("Hmisc")
+install.packages("reshape")
+library(dplyr)
+
+## Importing the dataset
+```{r}
+advertising <- read.csv("http://bit.ly/IPAdvertisingData")
+```
+
+
+
+# Previewing the dataset
+# ---
+# 
+```{r}
+head(advertising)
+```
+
+
+# Previewing the dataset
+# ---
+# 
+```{r}
+tail(advertising)
+```
+
+
+# Provides basic descriptive statistics and frequencies.
+
+```{r}
+summary(advertising)
+```
+
+
+# Provides basic descriptive statistics and frequencies.
+
+# Open data editor
+```{r}
+edit(advertising)
+```
+
+
+# Provides the structure of the datase
+```{r}
+str(advertising)
+```
+
+
+
+# Lists variables in the dataset
+```{r}
+names(advertising)
+```
+
+
+## Missing data
+
+
+### Number of missing per column/variable
+```{r}
+colSums(is.na(advertising))
+```
+ 
+
+## FINDING DUPLICATES
+
+# check dimensions
+```{r}
+dim(advertising)
+```
+
+
+#check unique values
+```{r}
+unique_items <- unique(advertising)
+unique_items
+```
+
+
+#check duplicates by rows
+```{r}
+duplicated_rows <- advertising[duplicated(advertising),]
+duplicated_rows
+```
+
+
+
+
+## 4. Tidying the Dataset
+
+### list rows of data that have missing values
+```{r}
+advertising[!complete.cases(advertising),]
+```
+
+
+## Removing missing data
+There were no missing data
+
+## Renaming variables
+
+# Using library –-reshape--
+```{r}
+library(reshape)
+
+advertising <- rename(advertising, c(Daily.Time.Spent.on.Site="time.spent"))
+advertising <- rename(advertising, c(Ad.Topic.Line="topic"))
+advertising <- rename(advertising, c(Daily.Internet.Usage="Usage"))
+advertising <- rename(advertising, c(Clicked.on.Ad ="Clicked"))
+advertising <- rename(advertising, c(Timestamp="timestamp"))
+advertising <- rename(advertising, c(Area.Income.="income"))
+advertising <- rename(advertising, c(Male.="gender"))
+```
+
+
+#confirming the dataset
+```{r}
+head(advertising)
+```
+
+
+#confirm data types per column
+```{r}
+str(advertising)
+```
+
+
+#converting data types
+
+```{r}
+print(advertising)
+```
+
+
+#FEATURE ENGINEERING:FORMATTING TIME/DATE COLUMNS
+#DATE CONVERSION OF THE TIMESTAMP COLUMN
+```{r}
+advertising$timestamp <- as.Date(advertising$timestamp)
+```
+
+
+# Type cast the column to date
+
+```{r}
+advertising$timestamp<- as.Date(advertising$timestamp)
+```
+
+
+#confirm the date conversion
+```{r}
+str(advertising)
+```
+ 
+
+
+#FEATURE ENGINEERING:FORMATTING TIME/DATE COLUMNS
+```{r}
+library(tidyr)
+library(lubridate)
+```
+
+
+```{r}
+advertising <- separate(advertising, timestamp, c("Year", "Month", "Day"))
+head(advertising)
+```
+
+
+
+#OUTLIERS
+
+```{r}
+boxplot(advertising$time.spent)
+
+```
+```{r}
+boxplot(advertising$Age)
+```
+```{r}
+boxplot(advertising$Usage)
+```
+
+```{r}
+boxplot(advertising$Area.Income)
+```
+```{r}
+boxplot.stats(advertising$Area.Income)
+```
+
+
+We could not omit the outliers, there are other factors that could have affected the area income, eg population of the area, country currency etc 
+
+
+
+```{r}
+names(advertising)
+```
+
+
+
+## 5. Exploratory Analysis
+#DESCRIPTIVE STATISTICS FOR THE DATASET
+
+
+# summary of descriptive statistics
+```{r}
+library(psych)
+
+describe(advertising)
+```
+
+
+#statistical measures of despersion by groped by male followed by city
+# Summarize function in the FSA package reports the five-number summary,descriptive statistics for grouped ordinal data.
+```{r}
+library(FSA)
+Summarize(time.spent ~ Male + City, data=advertising)
+```
+
+
+# package will summarize all variables in a data frame, listing the frequencies for levels of nominal variables; and for interval/ratio data, the minimum, 1st quartile, median, mean, 3rd quartile, and maximum
+```{r}
+summary(advertising)
+```
+
+
+#descriptive statistics for internet usage
+```{r}
+describe(advertising$Usage, type=3) 
+```
+      
+
+### Type of calculation for skewness and kurtosis
+#descriptive statistics for time.spent
+```{r}
+describe(advertising$time.spent,type=3)
+```
+
+
+#descriptive statistics for Age
+```{r}
+describe(advertising$Age,type=3)
+```
+
+
+#descriptive statistics for income
+```{r}
+describe(advertising$Area.Income, type=3)
+```
+
+
+#UNIVARIATE VISUALIZATIONS ANALYSIS
+
+##1.BARPLOTS
+
+###barplot(table(advertising$Time.Spent))
+
+```{r}
+barplot(table(advertising$Male))
+```
+
+
+
+
+
+```{r}
+pairs(~advertising$Area.Income+advertising$Clicked+advertising$time.spent+advertising$Usage, data=advertising, main="scatterplot matrix  for the Advertising")
+```
+
+
+```{r}
+barplot(table(advertising$Age), horiz=TRUE, main="Barplot")
+```
+
+
+```{r}
+boxplot(rt(100, 5), main="Boxplot")
+```
+
+
+```{r}
+stripchart(sample(1:20, 10, replace=TRUE), method="stack", main="Stripchart")
+```
+
+
+```{r}
+pie(table(sample(1:6, 10, replace=TRUE)), main="Piechart")
+```
+
+
+
+#BIVARIATE PLOTS
+
+```{r}
+library("ggplot2")
+#
+geom_line()
+ggplot(data =advertising,aes(x=time.spent,y=Area.Income))+
+  geom_line()
+```
+
+
+
+install.packages("corrplot")
+
+#Compute correlation matrix
+
+
+install.packages("Hmisc")
+
+
+#correlations
+```{r}
+res <- cor(advertising[0:4])
+round(res, 2)
+```
+
+
+#Correlation matrix with significance levels (p-value)
+# function rcorr() [in Hmisc package] can be used to compute the significance levels for pearson and spearman correlations. It returns both the correlation coefficients and the p-value of the correlation for all possible pairs of columns in the data table.
+library("Hmisc")
+
+#rcorr(advertising[0:4], type = c("pearson","spearman"))
+# corrplot(cor(advertising[ , c(1:4, 10)]), method = 'number',type='lower',tl.srt = 0, main="correlation matrix")
+
+
+
+#Correlation matrix with significance levels (p-value)
+
+# Extract the correlation coefficients
+res2$r
+# Extract p-values
+res2$P
+
+# flattenCorrMatrix
+# cormat : matrix of the correlation coefficients
+# pmat : matrix of the correlation p-values
+
+flattenCorrMatrix <- function(cormat, pmat) {
+  ut <- upper.tri(cormat)
+  data.frame(
+    row = rownames(cormat)[row(cormat)[ut]],
+    column = rownames(cormat)[col(cormat)[ut]],
+    cor  =(cormat)[ut],
+    p = pmat[ut]
+  )
+}
+res2<-rcorr(as.matrix(advertising[,0:4]))
+flattenCorrMatrix(res2$r, res2$P)
+
+
+
+#The R function symnum() replaces correlation coefficients by symbols according to the level of the correlation. It takes the correlation matrix as an argument 
+
+symnum(res, abbr.colnames = FALSE)
+
+install.packages("corrplot")
+
+library(corrplot)
+corrplot(res, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+
+
+
+# combine correlogram with the significance test.
+#In the plot, correlations with p-value > 0.01 are considered as insignificant. 
+#Use chart.Correlation(): Draw scatter plots
+
+corrplot(res2$r, type="upper", order="hclust", 
+         p.mat = res2$P, sig.level = 0.01, insig = "blank")
+
+
+         
+
+
+
+#Conclusion:
+The dataset was appropriate. it contained no missing values and minimal outliers amongst the variables
+Both univariate and Bivariate analysis revealed that the dataset is collinear, hence it can be analysed better by use of a classification algorithms.
